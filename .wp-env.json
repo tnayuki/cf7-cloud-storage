@@ -1,0 +1,8 @@
+{
+  "mappings": {
+  },
+  "plugins": [
+    ".",
+    "https://downloads.wordpress.org/plugin/contact-form-7.5.4.zip"
+  ]
+}
