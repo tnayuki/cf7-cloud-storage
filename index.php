@@ -1,6 +1,8 @@
 <?php
 /*
   Plugin Name: contact-form-7-cloud-storage
+  Text Domain: cf7-cloud-storage
+  Domain Path: /languages/  
  */
 
 require_once 'vendor/autoload.php';
@@ -168,9 +170,18 @@ function cf7_cloud_storage_wpcf7_enqueue_scripts() {
   wp_enqueue_style('cf7-cloud-storage', plugin_dir_url(__FILE__) . 'css/cf7_cloud_storage.css', array(), null);
 
   wp_add_inline_script('cf7-cloud-storage', 'var cf7_cloud_storage_ajax_url = '. json_encode(admin_url('admin-ajax.php')) . ';', 'before');
+
+  $strings = array(
+    'notAccepted' => __('File is not accepted.', 'cf7-cloud-storage'),
+    'dropFile' => __('Drop file here', 'cf7-cloud-storage'),
+  );
+  
+  wp_localize_script('cf7-cloud-storage', '_cf7CloudStorageL10n', $strings);
 }
 
 function cf7_cloud_storage_wpcf7_init() {
+  load_plugin_textdomain('cf7-cloud-storage', false, dirname(plugin_basename(__FILE__)) . '/languages');
+
   wpcf7_add_form_tag(array('file_cloud_storage'), 'cf7_cloud_storage_wpcf7_form_tag', array('name-attr' => true));
 }
 

@@ -20,7 +20,7 @@ function cf7_cloud_storage_dropzone(name, dropzone, accepts) {
 
             if (!accepted) {
                 message.classList.add('cf7-cloud-storage-dropzone-message-error');
-                message.innerText = 'File is not accepted.';
+                message.innerText = _cf7CloudStorageL10n.notAccepted;
 
                 hidden.value = '';
 
@@ -107,7 +107,7 @@ function cf7_cloud_storage_dropzone(name, dropzone, accepts) {
     dropzone.appendChild(file);
 
     var message = document.createElement('div');
-    message.innerText = 'Drop a file here';
+    message.innerText = _cf7CloudStorageL10n.dropFile;
     dropzone.appendChild(message);
 
     var progress = document.createElement("progress");
