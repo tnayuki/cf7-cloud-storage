@@ -122,15 +122,37 @@ function cf7_cloud_storage_wpcf7_before_send_mail($form) {
       $uploadsBucket = $storage->bucket(get_option('cf7_cloud_storage_bucket_name_for_uploads'));
       $archivesBucket = $storage->bucket(get_option('cf7_cloud_storage_bucket_name_for_archives'));
 
+      $mimeTypes = json_decode(file_get_contents(__DIR__ . '/mime.json'), true);
+
       $mail = $form->prop('mail');
 
       $directory = uniqid('', true);
       foreach ($data['cf7_cloud_storage_fields'] as $name) {
         if ($data[$name] !== '') {
+          $filename = basename($data[$name]);
+          $metadata = array();
+
           $object = $uploadsBucket->object($data[$name]);
-          $object->copy($archivesBucket, [
-            'name' => $directory . '/' . basename($data[$name])
+          $object = $object->copy($archivesBucket, [
+            'name' => $directory . '/' . $filename
           ]);
+
+          if (preg_match('/\.br$/', $filename)) {
+            $metadata['contentEncoding'] = 'br';
+            $filename = substr($filename, 0, -3);
+          } else if (preg_match('/\.gz$/', $filename)) {
+            $metadata['contentEncoding'] = 'gzip';
+            $filename = substr($filename, 0, -3);
+          }
+
+          $extension = substr($filename, strrpos($filename, '.') + 1);
+          if ($extension !== '' && isset($mimeTypes[$extension])) {
+            $metadata['contentType'] = $mimeTypes[$extension];
+          } else {
+            $metadata['contentType'] = 'application/octet-stream';
+          }
+
+          $object->update($metadata);
 
           $mail = str_replace("[$name]", 'https://storage.googleapis.com/' . get_option('cf7_cloud_storage_bucket_name_for_archives') . '/' . $directory . '/' . basename($data[$name]), $mail);
         }
