@@ -3,6 +3,7 @@
   },
   "plugins": [
     ".",
-    "https://downloads.wordpress.org/plugin/contact-form-7.5.4.zip"
+    "https://downloads.wordpress.org/plugin/contact-form-7.5.4.zip",
+    "https://downloads.wordpress.org/plugin/wp-mail-catcher.2.0.3.zip"
   ]
 }
