@@ -1,0 +1,29 @@
+.cf7-cloud-storage-dropzone {
+    align-items: center;
+    background: white;
+    border: 1px solid rgba(0, 0, 0, 0.8);
+    border-radius: 5px;
+    cursor: pointer;
+    display: flex;
+    height: 60px;
+    justify-content: center;
+    width: 300px;
+}
+
+.cf7-cloud-storage-dropzone-message {
+}
+
+.cf7-cloud-storage-dropzone-message-success {
+    color:rgb(6, 177, 6);
+}
+
+.cf7-cloud-storage-dropzone-message-error {
+    color:rgb(177, 6, 6);
+}
+
+.cf7-cloud-storage-dropzone-drag-hover {
+    border: 1px dashed;
+}
+
+.cf7-cloud-storage-dropzone-progress {
+}
