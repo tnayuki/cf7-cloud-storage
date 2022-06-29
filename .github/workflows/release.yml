@@ -1,0 +1,17 @@
+on:
+  push:
+    tags:
+      - 'v*'
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+    - uses: actions/checkout@v2
+    - run: zip -r cf7-cloud-storage.zip *.php css js languages mime.json vendor
+    - uses: ncipollo/release-action@v1
+      with:
+        artifacts: "cf7-cloud-storage.zip"
+        token: ${{ secrets.GITHUB_TOKEN }}
