@@ -25,6 +25,8 @@ add_action('wp_ajax_nopriv_get_signed_url', 'cf7_cloud_storage_ajax_get_signed_u
 add_action('wpcf7_before_send_mail', 'cf7_cloud_storage_wpcf7_before_send_mail');
 add_action('wpcf7_enqueue_scripts', 'cf7_cloud_storage_wpcf7_enqueue_scripts');
 add_action('wpcf7_init', 'cf7_cloud_storage_wpcf7_init');
+add_filter('wpcf7_posted_data_file_cloud_storage', 'cf7_cloud_storage_wpcf7_posted_data_file_cloud_storage', 10, 3);
+add_filter('wpcf7_posted_data_file_cloud_storage*', 'cf7_cloud_storage_wpcf7_posted_data_file_cloud_storage', 10, 3);
 add_filter('wpcf7_validate_file_cloud_storage', 'cf7_cloud_storage_wpcf7_validate_file_cloud_storage', 10, 2);
 add_filter('wpcf7_validate_file_cloud_storage*', 'cf7_cloud_storage_wpcf7_validate_file_cloud_storage', 10, 2);
 
@@ -124,7 +126,7 @@ function cf7_cloud_storage_wpcf7_before_send_mail($form) {
       return;
     }
 
-    if (isset($data['cf7_cloud_storage_fields']) && is_array($data['cf7_cloud_storage_fields'])) {
+    if (isset($_REQUEST['_cf7_cloud_storage_uploads']) && count($_REQUEST['_cf7_cloud_storage_uploads']) > 0) {
       $storage = new StorageClient([
         'keyFile' => json_decode(get_option('cf7_cloud_storage_service_account_key'), true)
       ]);
@@ -134,41 +136,31 @@ function cf7_cloud_storage_wpcf7_before_send_mail($form) {
 
       $mimeTypes = json_decode(file_get_contents(__DIR__ . '/mime.json'), true);
 
-      $mail = $form->prop('mail');
+      foreach ($_REQUEST['_cf7_cloud_storage_uploads'] as $name => $filename) {
+        $metadata = array();
 
-      $directory = uniqid('', true);
-      foreach ($data['cf7_cloud_storage_fields'] as $name) {
-        if ($data[$name] !== '') {
-          $filename = basename($data[$name]);
-          $metadata = array();
+        $object = $uploadsBucket->object($filename);
+        $object = $object->copy($archivesBucket, [
+          'name' => $_REQUEST['_cf7_cloud_storage_directory'] . '/' . basename($filename)
+        ]);
 
-          $object = $uploadsBucket->object($data[$name]);
-          $object = $object->copy($archivesBucket, [
-            'name' => $directory . '/' . $filename
-          ]);
-
-          if (preg_match('/\.br$/', $filename)) {
-            $metadata['contentEncoding'] = 'br';
-            $filename = substr($filename, 0, -3);
-          } else if (preg_match('/\.gz$/', $filename)) {
-            $metadata['contentEncoding'] = 'gzip';
-            $filename = substr($filename, 0, -3);
-          }
-
-          $extension = substr($filename, strrpos($filename, '.') + 1);
-          if ($extension !== '' && isset($mimeTypes[$extension])) {
-            $metadata['contentType'] = $mimeTypes[$extension];
-          } else {
-            $metadata['contentType'] = 'application/octet-stream';
-          }
-
-          $object->update($metadata);
-
-          $mail = str_replace("[$name]", 'https://storage.googleapis.com/' . get_option('cf7_cloud_storage_bucket_name_for_archives') . '/' . $directory . '/' . basename($data[$name]), $mail);
+        if (preg_match('/\.br$/', $filename)) {
+          $metadata['contentEncoding'] = 'br';
+          $filename = substr($filename, 0, -3);
+        } else if (preg_match('/\.gz$/', $filename)) {
+          $metadata['contentEncoding'] = 'gzip';
+          $filename = substr($filename, 0, -3);
         }
-      }
 
-      $form->set_properties([ 'mail' => $mail ]);
+        $extension = substr($filename, strrpos($filename, '.') + 1);
+        if ($extension !== '' && isset($mimeTypes[$extension])) {
+          $metadata['contentType'] = $mimeTypes[$extension];
+        } else {
+          $metadata['contentType'] = 'application/octet-stream';
+        }
+
+        $object->update($metadata);
+      }
     }
   }
 }
@@ -183,11 +175,14 @@ function cf7_cloud_storage_wpcf7_enqueue_scripts() {
     'notAccepted' => __('File is not accepted.', 'cf7-cloud-storage'),
     'dropFile' => __('Drop file here', 'cf7-cloud-storage'),
   );
-  
+
   wp_localize_script('cf7-cloud-storage', '_cf7CloudStorageL10n', $strings);
 }
 
 function cf7_cloud_storage_wpcf7_init() {
+  unset($_REQUEST['_cf7_cloud_storage_directory']);
+  unset($_REQUEST['_cf7_cloud_storage_uploads']);
+
   load_plugin_textdomain('cf7-cloud-storage', false, dirname(plugin_basename(__FILE__)) . '/languages');
 
   wpcf7_add_form_tag(
@@ -226,7 +221,6 @@ function cf7_cloud_storage_wpcf7_form_tag($tag) {
 
   return 
     '<span class="wpcf7-form-control-wrap ' . sanitize_html_class($tag->name) . '" data-name="' . esc_attr($tag->name) .'">' .
-    '<input type="hidden" name="cf7_cloud_storage_fields[]" value="' . htmlspecialchars($tag->name) . '">' .
     '<span class="wpcf7-form-control cf7-cloud-storage-dropzone" id=' . json_encode($id) . ' ' . wpcf7_format_atts($atts) . '></span>' .
     '<script>document.addEventListener("DOMContentLoaded", function() {' .
     '  cf7_cloud_storage_dropzone(' . json_encode($tag->name) . ', document.getElementById(' . json_encode($id) . '), ' . json_encode($accepts) . ');' .
@@ -234,6 +228,28 @@ function cf7_cloud_storage_wpcf7_form_tag($tag) {
     $validation_error .
     '</span>'
   ;
+}
+
+function cf7_cloud_storage_wpcf7_posted_data_file_cloud_storage($value, $value_orig, $tag) {
+  if (!isset($_REQUEST['_cf7_cloud_storage_directory'])) {
+    $_REQUEST['_cf7_cloud_storage_directory'] = uniqid('', true);
+  }
+
+  if (!isset($_REQUEST['_cf7_cloud_storage_uploads'])) {
+    $_REQUEST['_cf7_cloud_storage_uploads'] = array();
+  }
+
+  if (!empty($value)) {
+    $_REQUEST['_cf7_cloud_storage_uploads'][$tag->name] = $value;
+
+    return 'https://storage.googleapis.com/' .
+      get_option('cf7_cloud_storage_bucket_name_for_archives') . '/' .
+      $_REQUEST['_cf7_cloud_storage_directory'] . '/' .
+      urlencode(basename($value))
+    ;
+  } else {
+    return $value;
+  }
 }
 
 function cf7_cloud_storage_wpcf7_validate_file_cloud_storage($result, $tag) {
