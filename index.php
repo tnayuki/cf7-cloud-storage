@@ -2,7 +2,7 @@
 /*
   Plugin Name: Cloud Storage for Contact Form 7
   Plugin URI: https://github.com/tnayuki/cf7-cloud-storage
-  Version: 0.2.0
+  Version: 0.2.1
   Author: tnayuki
   Author URI: https://github.com/tnayuki/
   License: GPLv2
