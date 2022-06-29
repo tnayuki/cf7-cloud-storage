@@ -1,6 +1,6 @@
 <?php
 /*
-  Plugin Name: contact-form-7-cloud-storage
+  Plugin Name: Cloud Storage for Contact Form 7
   Version: 0.1.1
   Text Domain: cf7-cloud-storage
   Domain Path: /languages/  
@@ -51,7 +51,7 @@ function cf7_cloud_storage_admin_init(){
 }
 
 function cf7_cloud_storage_admin_menu() {
-  add_options_page('Contact Form 7 Cloud Storage', 'Contact Form 7 Cloud Storage', 'manage_options', 'cf7_cloud_storage', 'cf7_cloud_storage_options_page');
+  add_options_page('Cloud Storage for Contact Form 7', 'Cloud Storage for Contact Form 7', 'manage_options', 'cf7_cloud_storage', 'cf7_cloud_storage_options_page');
 }
 
 function cf7_cloud_storage_options_page() {
