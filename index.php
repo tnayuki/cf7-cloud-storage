@@ -5,6 +5,8 @@
   Version: 0.1.1
   Author: tnayuki
   Author URI: https://github.com/tnayuki/
+  License: GPLv2
+  License URI: https://www.gnu.org/licenses/gpl-2.0.html
   Text Domain: cf7-cloud-storage
   Domain Path: /languages/  
  */
