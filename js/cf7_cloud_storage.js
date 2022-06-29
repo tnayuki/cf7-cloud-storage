@@ -66,7 +66,7 @@ function cf7_cloud_storage_dropzone(name, dropzone, accepts) {
                                 message.classList.add('cf7-cloud-storage-dropzone-message-success');
                                 message.innerText = file.files[0].name;
 
-                                hidden.value = uploadUrl.pathname.replace(/^\/[\w-]+\//, '');
+                                hidden.value = decodeURIComponent(uploadUrl.pathname.replace(/^\/[\w-]+\//, ''));
                             }
                         }
                     }
