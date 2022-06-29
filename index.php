@@ -1,7 +1,10 @@
 <?php
 /*
   Plugin Name: Cloud Storage for Contact Form 7
+  Plugin URI: https://github.com/tnayuki/cf7-cloud-storage
   Version: 0.1.1
+  Author: tnayuki
+  Author URI: https://github.com/tnayuki/
   Text Domain: cf7-cloud-storage
   Domain Path: /languages/  
  */
