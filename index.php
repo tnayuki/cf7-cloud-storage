@@ -1,6 +1,7 @@
 <?php
 /*
   Plugin Name: contact-form-7-cloud-storage
+  Version: 0.1.1
   Text Domain: cf7-cloud-storage
   Domain Path: /languages/  
  */
