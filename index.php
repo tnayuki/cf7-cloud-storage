@@ -25,6 +25,8 @@ add_action('wp_ajax_nopriv_get_signed_url', 'cf7_cloud_storage_ajax_get_signed_u
 add_action('wpcf7_before_send_mail', 'cf7_cloud_storage_wpcf7_before_send_mail');
 add_action('wpcf7_enqueue_scripts', 'cf7_cloud_storage_wpcf7_enqueue_scripts');
 add_action('wpcf7_init', 'cf7_cloud_storage_wpcf7_init');
+add_filter('wpcf7_validate_file_cloud_storage', 'cf7_cloud_storage_wpcf7_validate_file_cloud_storage', 10, 2);
+add_filter('wpcf7_validate_file_cloud_storage*', 'cf7_cloud_storage_wpcf7_validate_file_cloud_storage', 10, 2);
 
 function cf7_cloud_storage_admin_init(){
   register_setting('cf7_cloud_storage', 'cf7_cloud_storage_service_account_key');
@@ -188,18 +190,56 @@ function cf7_cloud_storage_wpcf7_enqueue_scripts() {
 function cf7_cloud_storage_wpcf7_init() {
   load_plugin_textdomain('cf7-cloud-storage', false, dirname(plugin_basename(__FILE__)) . '/languages');
 
-  wpcf7_add_form_tag(array('file_cloud_storage'), 'cf7_cloud_storage_wpcf7_form_tag', array('name-attr' => true));
+  wpcf7_add_form_tag(
+    array('file_cloud_storage', 'file_cloud_storage*'),
+    'cf7_cloud_storage_wpcf7_form_tag',
+    array('name-attr' => true)
+  );
 }
 
 function cf7_cloud_storage_wpcf7_form_tag($tag) {
   $id = 'cf7-cloud-storage-dropzone-' . $tag->name;
   $accepts = $tag->get_option('accept', '');
 
+  $validation_error = wpcf7_get_validation_error($tag->name);
+
+  $class = wpcf7_form_controls_class($tag->type);
+	if ($validation_error) {
+		$class .= ' wpcf7-not-valid';
+	}
+
+  $atts = array();
+
+	if ($tag->is_required()) {
+		$atts['aria-required'] = 'true';
+	}
+
+	if ($validation_error) {
+		$atts['aria-invalid'] = 'true';
+		$atts['aria-describedby'] = wpcf7_get_validation_error_reference($tag->name);
+	} else {
+		$atts['aria-invalid'] = 'false';
+	}
+
+	$atts['class'] = $tag->get_class_option($class);
+	$atts['id'] = $tag->get_id_option();
+
   return 
+    '<span class="wpcf7-form-control-wrap ' . sanitize_html_class($tag->name) . '" data-name="' . esc_attr($tag->name) .'">' .
     '<input type="hidden" name="cf7_cloud_storage_fields[]" value="' . htmlspecialchars($tag->name) . '">' .
-    '<div class="cf7-cloud-storage-dropzone" id=' . json_encode($id) . '></div>' .
+    '<span class="wpcf7-form-control cf7-cloud-storage-dropzone" id=' . json_encode($id) . ' ' . wpcf7_format_atts($atts) . '></span>' .
     '<script>document.addEventListener("DOMContentLoaded", function() {' .
     '  cf7_cloud_storage_dropzone(' . json_encode($tag->name) . ', document.getElementById(' . json_encode($id) . '), ' . json_encode($accepts) . ');' .
-    '});</script>'
+    '});</script>' .
+    $validation_error .
+    '</span>'
   ;
+}
+
+function cf7_cloud_storage_wpcf7_validate_file_cloud_storage($result, $tag) {
+  if ($tag->is_required() && (!isset($_POST[$tag->name]) || empty($_POST[$tag->name]))) {
+    $result->invalidate($tag, wpcf7_get_message('invalid_required'));
+  }
+
+  return $result;
 }
