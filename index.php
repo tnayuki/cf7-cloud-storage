@@ -155,6 +155,8 @@ function cf7_cloud_storage_wpcf7_before_send_mail($form) {
         $extension = substr($filename, strrpos($filename, '.') + 1);
         if ($extension !== '' && isset($mimeTypes[$extension])) {
           $metadata['contentType'] = $mimeTypes[$extension];
+        } else if ($extension == 'data') {
+          $metadata['contentType'] = 'application/xml';
         } else {
           $metadata['contentType'] = 'application/octet-stream';
         }
