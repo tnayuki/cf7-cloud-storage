@@ -247,7 +247,7 @@ function cf7_cloud_storage_wpcf7_posted_data_file_cloud_storage($value, $value_o
     return 'https://storage.googleapis.com/' .
       get_option('cf7_cloud_storage_bucket_name_for_archives') . '/' .
       $_REQUEST['_cf7_cloud_storage_directory'] . '/' .
-      urlencode(basename($value))
+      rawurlencode(basename($value))
     ;
   } else {
     return $value;
